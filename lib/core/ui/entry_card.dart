@@ -1,10 +1,12 @@
+﻿import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:flutter/material.dart';
+import 'package:today_i_learned/core/models/entry.dart';
 
 class EntryCard extends StatelessWidget {
-  final int index;
+  final Entry entry;
+  final VoidCallback? onTap;
 
-  const EntryCard({super.key, required this.index});
+  const EntryCard({super.key, required this.entry, this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -12,10 +14,9 @@ class EntryCard extends StatelessWidget {
     final textTheme = theme.textTheme;
     final colorScheme = theme.colorScheme;
 
-    final entryDate = DateTime(2026, 9, 12).subtract(Duration(days: index));
     final formattedDate = DateFormat(
       'EEE, MMM d',
-    ).format(entryDate).toUpperCase();
+    ).format(entry.createdAt).toUpperCase();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -41,43 +42,47 @@ class EntryCard extends StatelessWidget {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Subtle States and Architecture',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: textTheme.titleLarge?.copyWith(
-                    fontWeight: FontWeight.w600,
-                    height: 1.2,
-                    letterSpacing: -0.2,
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    entry.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.titleLarge?.copyWith(
+                      fontWeight: FontWeight.w600,
+                      height: 1.2,
+                      letterSpacing: -0.2,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 12),
-                Text(
-                  'When you push UI elements toward the screen edges, the internal padding must compensate. It prevents the content from feeling trapped and maintains readability while keeping the design calm and professional.',
-                  maxLines: 3, // Constrains long body text
-                  overflow: TextOverflow.ellipsis,
-                  style: textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                    height: 1.6,
+                  const SizedBox(height: 12),
+                  Text(
+                    entry.body,
+                    maxLines: 3,
+                    overflow: TextOverflow.ellipsis,
+                    style: textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                      height: 1.6,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 24),
-
-                // --- Tags Section ---
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    _buildTag('Design', theme),
-                    _buildTag('Architecture', theme),
+                  if (entry.tags.isNotEmpty) ...[
+                    const SizedBox(height: 24),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: entry.tags
+                          .map((tag) => _buildTag(tag, theme))
+                          .toList(),
+                    ),
                   ],
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
@@ -88,7 +93,7 @@ class EntryCard extends StatelessWidget {
   Widget _buildTag(String label, ThemeData theme) {
     return DecoratedBox(
       decoration: BoxDecoration(
-        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+        color: theme.colorScheme.surfaceContainerHighest.withValues(alpha: 0.6),
         borderRadius: BorderRadius.circular(24),
       ),
       child: Padding(

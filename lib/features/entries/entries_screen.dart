@@ -1,22 +1,52 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:today_i_learned/core/models/entry.dart';
+import 'package:today_i_learned/core/providers/providers.dart';
 import 'package:today_i_learned/core/ui/entry_card.dart';
+import 'package:today_i_learned/features/entries/entry_detail_screen.dart';
+import 'package:today_i_learned/features/entries/new_entry_screen.dart';
+import 'package:today_i_learned/features/settings/settings_screen.dart';
 
-class EntriesScreen extends StatefulWidget {
+class EntriesScreen extends ConsumerStatefulWidget {
   const EntriesScreen({super.key});
 
   @override
-  State<EntriesScreen> createState() => _EntriesScreenState();
+  ConsumerState<EntriesScreen> createState() => _EntriesScreenState();
 }
 
-class _EntriesScreenState extends State<EntriesScreen> {
-  int _selectedFilterIndex = 0;
+class _EntriesScreenState extends ConsumerState<EntriesScreen> {
   final TextEditingController _searchController = TextEditingController();
-  final List<String> _filters = ['All', 'Insights', 'Architecture', 'Flutter'];
+
+  @override
+  void initState() {
+    super.initState();
+    _searchController.addListener(() {
+      ref.read(searchQueryProvider.notifier).state = _searchController.text;
+    });
+  }
 
   @override
   void dispose() {
     _searchController.dispose();
     super.dispose();
+  }
+
+  void _openEntry(Entry entry) {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => EntryDetailScreen(entry: entry)));
+  }
+
+  void _openNewEntry() {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const NewEntryScreen()));
+  }
+
+  void _openSettings() {
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const SettingsScreen()));
   }
 
   @override
@@ -25,9 +55,15 @@ class _EntriesScreenState extends State<EntriesScreen> {
     final textTheme = theme.textTheme;
     final colorScheme = theme.colorScheme;
 
+    final entriesAsync = ref.watch(entriesNotifierProvider);
+    final filtered = ref.watch(filteredEntriesProvider);
+    final allTags = ref.watch(allTagsProvider);
+    final selectedTag = ref.watch(selectedTagProvider);
+    final isEmpty = entriesAsync.valueOrNull?.isEmpty ?? false;
+
     return Scaffold(
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: _openNewEntry,
         elevation: 0,
         tooltip: 'New Entry',
         shape: const CircleBorder(),
@@ -35,6 +71,7 @@ class _EntriesScreenState extends State<EntriesScreen> {
       ),
       body: CustomScrollView(
         slivers: [
+          // --- AppBar ---
           SliverAppBar(
             floating: true,
             snap: true,
@@ -57,15 +94,15 @@ class _EntriesScreenState extends State<EntriesScreen> {
               Padding(
                 padding: const EdgeInsets.only(right: 8),
                 child: IconButton(
-                  onPressed: () {},
+                  onPressed: _openSettings,
                   tooltip: 'Settings',
-                  icon: const Icon(Icons.settings),
+                  icon: const Icon(Icons.settings_outlined),
                 ),
               ),
             ],
           ),
 
-          // --- Search Section ---
+          // --- Search ---
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.fromLTRB(8, 12, 8, 20),
@@ -74,7 +111,7 @@ class _EntriesScreenState extends State<EntriesScreen> {
                 constraints: const BoxConstraints(minHeight: 48, maxHeight: 48),
                 hintText: 'Search your entries...',
                 hintStyle: WidgetStatePropertyAll(
-                  theme.textTheme.bodyMedium?.copyWith(
+                  textTheme.bodyMedium?.copyWith(
                     color: colorScheme.onSurfaceVariant,
                     fontSize: 15,
                   ),
@@ -97,9 +134,8 @@ class _EntriesScreenState extends State<EntriesScreen> {
                 trailing: [
                   ValueListenableBuilder<TextEditingValue>(
                     valueListenable: _searchController,
-                    builder: (context, value, child) {
-                      final bool hasText = value.text.isNotEmpty;
-
+                    builder: (context, value, _) {
+                      final hasText = value.text.isNotEmpty;
                       return AnimatedOpacity(
                         opacity: hasText ? 1.0 : 0.0,
                         duration: const Duration(milliseconds: 200),
@@ -110,11 +146,7 @@ class _EntriesScreenState extends State<EntriesScreen> {
                             icon: const Icon(Icons.close_rounded, size: 20),
                             color: colorScheme.onSurfaceVariant,
                             tooltip: 'Clear',
-                            onPressed: () {
-                              _searchController.clear();
-                              // Optionally remove focus (hide keyboard) when cleared:
-                              // FocusScope.of(context).unfocus();
-                            },
+                            onPressed: _searchController.clear,
                           ),
                         ),
                       );
@@ -125,18 +157,18 @@ class _EntriesScreenState extends State<EntriesScreen> {
             ),
           ),
 
-          // --- Filter Section ---
+          // --- Filter chips ---
           SliverToBoxAdapter(
             child: SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: Row(
-                children: List.generate(_filters.length, (index) {
-                  final isSelected = _selectedFilterIndex == index;
+                children: allTags.map((tag) {
+                  final isSelected = selectedTag == tag;
                   return Padding(
                     padding: const EdgeInsets.only(right: 8),
                     child: FilterChip(
-                      label: Text(_filters[index]),
+                      label: Text(tag),
                       selected: isSelected,
                       showCheckmark: false,
                       elevation: 0,
@@ -156,33 +188,81 @@ class _EntriesScreenState extends State<EntriesScreen> {
                         borderRadius: BorderRadius.circular(20),
                         side: const BorderSide(color: Colors.transparent),
                       ),
-                      onSelected: (bool selected) {
-                        setState(() {
-                          _selectedFilterIndex = index;
-                        });
-                      },
+                      onSelected: (_) =>
+                          ref.read(selectedTagProvider.notifier).state = tag,
                     ),
                   );
-                }),
+                }).toList(),
               ),
             ),
           ),
 
-          // --- Entries List ---
-          SliverPadding(
-            padding: EdgeInsets.fromLTRB(
-              8,
-              24,
-              8,
-              MediaQuery.paddingOf(context).bottom + 100,
+          // --- Entries or empty state ---
+          entriesAsync.when(
+            loading: () => const SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(child: CircularProgressIndicator()),
             ),
-            sliver: SliverList.separated(
-              itemCount: 4,
-              separatorBuilder: (context, index) => const SizedBox(height: 12),
-              itemBuilder: (context, index) {
-                return EntryCard(index: index);
-              },
+            error: (e, _) => SliverFillRemaining(
+              hasScrollBody: false,
+              child: Center(child: Text('Error: $e')),
             ),
+            data: (_) {
+              if (filtered.isEmpty) {
+                return SliverFillRemaining(
+                  hasScrollBody: false,
+                  child: Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(32),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.search_off_rounded,
+                            size: 48,
+                            color: colorScheme.onSurfaceVariant.withValues(
+                              alpha: 0.5,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            isEmpty
+                                ? 'No entries yet.\nTap + to add your first one!'
+                                : 'No entries match your search.',
+                            textAlign: TextAlign.center,
+                            style: textTheme.bodyMedium?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                              height: 1.5,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                );
+              }
+
+              return SliverPadding(
+                padding: EdgeInsets.fromLTRB(
+                  8,
+                  24,
+                  8,
+                  MediaQuery.paddingOf(context).bottom + 100,
+                ),
+                sliver: SliverList.separated(
+                  itemCount: filtered.length,
+                  separatorBuilder: (_, _) => const SizedBox(height: 12),
+                  itemBuilder: (context, index) {
+                    final entry = filtered[index];
+                    return EntryCard(
+                      key: ValueKey(entry.id),
+                      entry: entry,
+                      onTap: () => _openEntry(entry),
+                    );
+                  },
+                ),
+              );
+            },
           ),
         ],
       ),
