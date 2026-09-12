@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:today_i_learned/core/models/entry.dart';
 import 'package:today_i_learned/core/providers/providers.dart';
@@ -14,24 +15,14 @@ class _NewEntryScreenState extends ConsumerState<NewEntryScreen> {
   final _formKey = GlobalKey<FormState>();
   final _titleController = TextEditingController();
   final _bodyController = TextEditingController();
-  final _tagsController = TextEditingController();
+  List<String> _tags = [];
   bool _isSaving = false;
 
   @override
   void dispose() {
     _titleController.dispose();
     _bodyController.dispose();
-    _tagsController.dispose();
     super.dispose();
-  }
-
-  List<String> _parseTags(String raw) {
-    return raw
-        .split(',')
-        .map((t) => t.trim())
-        .where((t) => t.isNotEmpty)
-        .toSet()
-        .toList();
   }
 
   Future<void> _save() async {
@@ -43,12 +34,11 @@ class _NewEntryScreenState extends ConsumerState<NewEntryScreen> {
       id: DateTime.now().millisecondsSinceEpoch.toString(),
       title: _titleController.text.trim(),
       body: _bodyController.text.trim(),
-      tags: _parseTags(_tagsController.text),
+      tags: _tags,
       createdAt: DateTime.now(),
     );
 
     await ref.read(entriesNotifierProvider.notifier).add(entry);
-
     if (mounted) Navigator.of(context).pop();
   }
 
@@ -61,6 +51,7 @@ class _NewEntryScreenState extends ConsumerState<NewEntryScreen> {
     return Scaffold(
       body: CustomScrollView(
         slivers: [
+          // --- AppBar ---
           SliverAppBar(
             floating: false,
             pinned: true,
@@ -70,12 +61,6 @@ class _NewEntryScreenState extends ConsumerState<NewEntryScreen> {
               icon: const Icon(Icons.close),
               tooltip: 'Discard',
               onPressed: () => Navigator.of(context).pop(),
-            ),
-            title: Text(
-              'New Entry',
-              style: textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
             ),
             actions: [
               Padding(
@@ -98,6 +83,8 @@ class _NewEntryScreenState extends ConsumerState<NewEntryScreen> {
               ),
             ],
           ),
+
+          // --- Form ---
           SliverPadding(
             padding: EdgeInsets.fromLTRB(
               20,
@@ -114,7 +101,7 @@ class _NewEntryScreenState extends ConsumerState<NewEntryScreen> {
                     children: [
                       const SizedBox(height: 8),
 
-                      // Title
+                      // --- Title ---
                       TextFormField(
                         controller: _titleController,
                         autofocus: true,
@@ -143,15 +130,9 @@ class _NewEntryScreenState extends ConsumerState<NewEntryScreen> {
                         maxLines: null,
                       ),
 
-                      const SizedBox(height: 20),
-                      Divider(
-                        color: colorScheme.outlineVariant.withValues(
-                          alpha: 0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 20),
+                      const SizedBox(height: 32),
 
-                      // Body
+                      // --- Body ---
                       TextFormField(
                         controller: _bodyController,
                         textCapitalization: TextCapitalization.sentences,
@@ -179,62 +160,12 @@ class _NewEntryScreenState extends ConsumerState<NewEntryScreen> {
                         minLines: 6,
                       ),
 
-                      const SizedBox(height: 32),
-                      Divider(
-                        color: colorScheme.outlineVariant.withValues(
-                          alpha: 0.5,
-                        ),
-                      ),
-                      const SizedBox(height: 16),
+                      const SizedBox(height: 40),
 
-                      // Tags label
-                      Text(
-                        'TAGS',
-                        style: textTheme.labelSmall?.copyWith(
-                          color: colorScheme.primary,
-                          fontWeight: FontWeight.w700,
-                          letterSpacing: 1.4,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-
-                      // Tags input
-                      TextFormField(
-                        controller: _tagsController,
-                        textCapitalization: TextCapitalization.words,
-                        style: textTheme.bodyMedium,
-                        decoration: InputDecoration(
-                          hintText: 'Flutter, Design, Architecture...',
-                          hintStyle: textTheme.bodyMedium?.copyWith(
-                            color: colorScheme.onSurface.withValues(
-                              alpha: 0.35,
-                            ),
-                          ),
-                          helperText: 'Separate tags with commas',
-                          border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
-                              color: colorScheme.outlineVariant,
-                            ),
-                          ),
-                          enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
-                              color: colorScheme.outlineVariant,
-                            ),
-                          ),
-                          focusedBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
-                            borderSide: BorderSide(
-                              color: colorScheme.primary,
-                              width: 2,
-                            ),
-                          ),
-                          contentPadding: const EdgeInsets.symmetric(
-                            horizontal: 16,
-                            vertical: 14,
-                          ),
-                        ),
+                      // --- Tags ---
+                      _TagsInputSection(
+                        tags: _tags,
+                        onChanged: (tags) => setState(() => _tags = tags),
                       ),
                     ],
                   ),
@@ -244,6 +175,168 @@ class _NewEntryScreenState extends ConsumerState<NewEntryScreen> {
           ),
         ],
       ),
+    );
+  }
+}
+
+// ---------------------------------------------------------------------------
+// Tags input
+// ---------------------------------------------------------------------------
+
+class _TagsInputSection extends StatefulWidget {
+  const _TagsInputSection({required this.tags, required this.onChanged});
+
+  final List<String> tags;
+  final ValueChanged<List<String>> onChanged;
+
+  @override
+  State<_TagsInputSection> createState() => _TagsInputSectionState();
+}
+
+class _TagsInputSectionState extends State<_TagsInputSection> {
+  final TextEditingController _controller = TextEditingController();
+  final FocusNode _focusNode = FocusNode();
+
+  @override
+  void initState() {
+    super.initState();
+    _focusNode.addListener(() => setState(() {}));
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _commitCurrentInput() {
+    final text = _controller.text.trim().replaceAll(',', '');
+    if (text.isNotEmpty && !widget.tags.contains(text)) {
+      widget.onChanged([...widget.tags, text]);
+    }
+    _controller.clear();
+  }
+
+  void _removeTag(String tag) {
+    widget.onChanged(widget.tags.where((t) => t != tag).toList());
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final textTheme = theme.textTheme;
+    final colorScheme = theme.colorScheme;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Add tags',
+          style: textTheme.bodySmall?.copyWith(
+            color: colorScheme.onSurfaceVariant,
+            fontWeight: FontWeight.w500,
+          ),
+        ),
+        const SizedBox(height: 8),
+
+        // Normal text field input
+        KeyboardListener(
+          focusNode: FocusNode(),
+          onKeyEvent: (event) {
+            if (event is KeyDownEvent &&
+                (event.logicalKey == LogicalKeyboardKey.comma ||
+                    event.logicalKey == LogicalKeyboardKey.enter)) {
+              _commitCurrentInput();
+            }
+          },
+          child: TextField(
+            controller: _controller,
+            focusNode: _focusNode,
+            textCapitalization: TextCapitalization.words,
+            style: textTheme.bodyMedium,
+            decoration: InputDecoration(
+              hintText: 'Flutter, Design...',
+              hintStyle: textTheme.bodyMedium?.copyWith(
+                color: colorScheme.onSurface.withValues(alpha: 0.35),
+              ),
+              isDense: true,
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+                  width: 1,
+                ),
+              ),
+              enabledBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.3),
+                  width: 1,
+                ),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(12),
+                borderSide: BorderSide(
+                  color: colorScheme.outlineVariant.withValues(alpha: 0.6),
+                  width: 1,
+                ),
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
+            ),
+            onChanged: (value) {
+              if (value.endsWith(',')) {
+                _commitCurrentInput();
+              }
+            },
+            onSubmitted: (_) {
+              _commitCurrentInput();
+              _focusNode.requestFocus();
+            },
+          ),
+        ),
+
+        // Hint
+        const SizedBox(height: 6),
+        Text(
+          'Press comma or Return to add',
+          style: textTheme.labelSmall?.copyWith(
+            color: colorScheme.onSurfaceVariant.withValues(alpha: 0.55),
+          ),
+        ),
+
+        // Chips row — below the input
+        if (widget.tags.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: widget.tags.map((tag) {
+              return InputChip(
+                label: Text(tag),
+                labelStyle: textTheme.labelMedium?.copyWith(
+                  color: colorScheme.onSecondaryContainer,
+                  fontWeight: FontWeight.w600,
+                ),
+                backgroundColor: colorScheme.secondaryContainer,
+                deleteIconColor: colorScheme.onSecondaryContainer.withValues(
+                  alpha: 0.7,
+                ),
+                side: BorderSide.none,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                onDeleted: () => _removeTag(tag),
+                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                visualDensity: VisualDensity.compact,
+              );
+            }).toList(),
+          ),
+        ],
+      ],
     );
   }
 }

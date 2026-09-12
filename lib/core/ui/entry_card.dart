@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:today_i_learned/core/models/entry.dart';
 
@@ -23,7 +23,7 @@ class EntryCard extends StatelessWidget {
       children: [
         // --- Section Header ---
         Padding(
-          padding: const EdgeInsets.only(left: 4, bottom: 12),
+          padding: const EdgeInsets.only(left: 4, bottom: 8),
           child: Text(
             formattedDate,
             style: textTheme.labelMedium?.copyWith(

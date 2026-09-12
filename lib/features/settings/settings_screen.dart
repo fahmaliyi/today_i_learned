@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
+﻿import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:today_i_learned/core/providers/providers.dart';
+import 'package:today_i_learned/core/ui/expressive_list.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -15,9 +16,16 @@ class SettingsScreen extends ConsumerWidget {
     final entryCount =
         ref.watch(entriesNotifierProvider).valueOrNull?.length ?? 0;
 
+    final themeModes = [
+      (ThemeMode.system, Icons.brightness_auto_rounded, 'System default'),
+      (ThemeMode.light, Icons.light_mode_outlined, 'Light'),
+      (ThemeMode.dark, Icons.dark_mode_outlined, 'Dark'),
+    ];
+
     return Scaffold(
       body: CustomScrollView(
         slivers: [
+          // --- AppBar ---
           SliverAppBar(
             floating: false,
             pinned: true,
@@ -34,126 +42,109 @@ class SettingsScreen extends ConsumerWidget {
               ),
             ),
           ),
+
           SliverPadding(
             padding: EdgeInsets.fromLTRB(
-              16,
+              0,
               8,
-              16,
+              0,
               MediaQuery.paddingOf(context).bottom + 32,
             ),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 // --- Appearance ---
                 _SectionHeader(label: 'Appearance'),
-                const SizedBox(height: 8),
-                Card(
-                  margin: EdgeInsets.zero,
-                  elevation: 0,
-                  color: colorScheme.surfaceContainerLow,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    children: [
-                      _ThemeTile(
-                        icon: Icons.brightness_auto_rounded,
-                        label: 'System default',
-                        mode: ThemeMode.system,
-                        currentMode: currentTheme,
-                        onTap: () => ref
-                            .read(themeNotifierProvider.notifier)
-                            .setThemeMode(ThemeMode.system),
+                ExpressiveList(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: themeModes.length,
+                  itemBuilder: (context, index, borderRadius) {
+                    final (mode, icon, label) = themeModes[index];
+                    final isSelected = currentTheme == mode;
+                    return ExpressiveListTile(
+                      borderRadius: borderRadius,
+                      leading: Icon(
+                        icon,
+                        color: isSelected
+                            ? colorScheme.primary
+                            : colorScheme.onSurfaceVariant,
                       ),
-                      _Divider(),
-                      _ThemeTile(
-                        icon: Icons.light_mode_outlined,
-                        label: 'Light',
-                        mode: ThemeMode.light,
-                        currentMode: currentTheme,
-                        onTap: () => ref
-                            .read(themeNotifierProvider.notifier)
-                            .setThemeMode(ThemeMode.light),
-                      ),
-                      _Divider(),
-                      _ThemeTile(
-                        icon: Icons.dark_mode_outlined,
-                        label: 'Dark',
-                        mode: ThemeMode.dark,
-                        currentMode: currentTheme,
-                        onTap: () => ref
-                            .read(themeNotifierProvider.notifier)
-                            .setThemeMode(ThemeMode.dark),
-                      ),
-                    ],
-                  ),
+                      title: Text(label),
+                      trailing: isSelected
+                          ? Icon(
+                              Icons.check_rounded,
+                              color: colorScheme.primary,
+                            )
+                          : null,
+                      onTap: () => ref
+                          .read(themeNotifierProvider.notifier)
+                          .setThemeMode(mode),
+                    );
+                  },
                 ),
 
                 const SizedBox(height: 32),
 
                 // --- Data ---
                 _SectionHeader(label: 'Data'),
-                const SizedBox(height: 8),
-                Card(
-                  margin: EdgeInsets.zero,
-                  elevation: 0,
-                  color: colorScheme.surfaceContainerLow,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: ListTile(
-                    leading: Icon(
-                      Icons.inventory_2_outlined,
-                      color: colorScheme.onSurfaceVariant,
-                    ),
-                    title: const Text('Total entries'),
-                    trailing: Text(
-                      '$entryCount',
-                      style: textTheme.titleMedium?.copyWith(
-                        color: colorScheme.primary,
-                        fontWeight: FontWeight.w700,
+                ExpressiveList(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: 1,
+                  itemBuilder: (context, index, borderRadius) {
+                    return ExpressiveListTile(
+                      borderRadius: borderRadius,
+                      leading: Icon(
+                        Icons.inventory_2_outlined,
+                        color: colorScheme.onSurfaceVariant,
                       ),
-                    ),
-                  ),
+                      title: const Text('Total entries'),
+                      trailing: Text(
+                        '$entryCount',
+                        style: textTheme.titleMedium?.copyWith(
+                          color: colorScheme.primary,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    );
+                  },
                 ),
 
                 const SizedBox(height: 32),
 
                 // --- About ---
                 _SectionHeader(label: 'About'),
-                const SizedBox(height: 8),
-                Card(
-                  margin: EdgeInsets.zero,
-                  elevation: 0,
-                  color: colorScheme.surfaceContainerLow,
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
-                  ),
-                  child: Column(
-                    children: [
-                      ListTile(
+                ExpressiveList(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: 2,
+                  itemBuilder: (context, index, borderRadius) {
+                    if (index == 0) {
+                      return ExpressiveListTile(
+                        borderRadius: borderRadius,
                         leading: Icon(
                           Icons.auto_stories_rounded,
                           color: colorScheme.primary,
                         ),
                         title: const Text('Today I Learned'),
                         subtitle: const Text('Your personal knowledge log'),
+                      );
+                    }
+                    return ExpressiveListTile(
+                      borderRadius: borderRadius,
+                      leading: Icon(
+                        Icons.info_outline_rounded,
+                        color: colorScheme.onSurfaceVariant,
                       ),
-                      _Divider(),
-                      ListTile(
-                        leading: Icon(
-                          Icons.info_outline_rounded,
+                      title: const Text('Version'),
+                      trailing: Text(
+                        '0.1.0',
+                        style: textTheme.bodyMedium?.copyWith(
                           color: colorScheme.onSurfaceVariant,
                         ),
-                        title: const Text('Version'),
-                        trailing: Text(
-                          '0.1.0',
-                          style: textTheme.bodyMedium?.copyWith(
-                            color: colorScheme.onSurfaceVariant,
-                          ),
-                        ),
                       ),
-                    ],
-                  ),
+                    );
+                  },
                 ),
               ]),
             ),
@@ -172,7 +163,7 @@ class _SectionHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 4),
+      padding: const EdgeInsets.fromLTRB(20, 0, 20, 6),
       child: Text(
         label.toUpperCase(),
         style: theme.textTheme.labelSmall?.copyWith(
@@ -181,53 +172,6 @@ class _SectionHeader extends StatelessWidget {
           letterSpacing: 1.2,
         ),
       ),
-    );
-  }
-}
-
-class _ThemeTile extends StatelessWidget {
-  const _ThemeTile({
-    required this.icon,
-    required this.label,
-    required this.mode,
-    required this.currentMode,
-    required this.onTap,
-  });
-
-  final IconData icon;
-  final String label;
-  final ThemeMode mode;
-  final ThemeMode currentMode;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
-    final isSelected = mode == currentMode;
-
-    return ListTile(
-      leading: Icon(
-        icon,
-        color: isSelected ? colorScheme.primary : colorScheme.onSurfaceVariant,
-      ),
-      title: Text(label),
-      trailing: isSelected
-          ? Icon(Icons.check_rounded, color: colorScheme.primary)
-          : null,
-      onTap: onTap,
-    );
-  }
-}
-
-class _Divider extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return Divider(
-      height: 1,
-      indent: 56,
-      color: Theme.of(
-        context,
-      ).colorScheme.outlineVariant.withValues(alpha: 0.4),
     );
   }
 }

@@ -251,7 +251,7 @@ class _EntriesScreenState extends ConsumerState<EntriesScreen> {
                 ),
                 sliver: SliverList.separated(
                   itemCount: filtered.length,
-                  separatorBuilder: (_, _) => const SizedBox(height: 12),
+                  separatorBuilder: (_, _) => const SizedBox(height: 28),
                   itemBuilder: (context, index) {
                     final entry = filtered[index];
                     return EntryCard(
