@@ -1,4 +1,4 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:today_i_learned/core/providers/providers.dart';
 import 'package:today_i_learned/core/theme/theme.dart';
@@ -10,7 +10,9 @@ class ColorNotifier extends Notifier<Color> {
   Color build() {
     final prefs = ref.read(sharedPreferencesProvider);
     final storedIndex = prefs.getInt(_kColorKey);
-    if (storedIndex == null || storedIndex < 0 || storedIndex >= AppTheme.seedColors.length) {
+    if (storedIndex == null ||
+        storedIndex < 0 ||
+        storedIndex >= AppTheme.seedColors.length) {
       return AppTheme.seedColors[0].$2; // Default to the first color (Indigo)
     }
     return AppTheme.seedColors[storedIndex].$2;

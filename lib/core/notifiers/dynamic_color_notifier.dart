@@ -1,4 +1,4 @@
-﻿import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:today_i_learned/core/providers/providers.dart';
 
 const _kDynamicColorKey = 'til_dynamic_color';

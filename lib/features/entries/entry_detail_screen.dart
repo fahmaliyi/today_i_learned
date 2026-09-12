@@ -316,7 +316,7 @@ class _EntryDetailScreenState extends ConsumerState<EntryDetailScreen> {
                 onPressed: () {
                   final text =
                       '${_titleController.text}\n\n${_bodyController.text}';
-                  Share.share(text);
+                  SharePlus.instance.share(ShareParams(text: text));
                 },
                 icon: const Icon(Icons.share_outlined),
                 label: const Text('Share'),
