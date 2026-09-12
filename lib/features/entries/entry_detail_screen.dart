@@ -1,6 +1,6 @@
+import 'package:intl/intl.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:intl/intl.dart';
 import 'package:today_i_learned/core/models/entry.dart';
 import 'package:today_i_learned/core/providers/providers.dart';
 
@@ -29,10 +29,32 @@ class EntryDetailScreen extends ConsumerWidget {
               onPressed: () => Navigator.of(context).pop(),
             ),
             actions: [
-              IconButton(
-                icon: Icon(Icons.delete_outline, color: colorScheme.error),
-                tooltip: 'Delete entry',
-                onPressed: () => _confirmDelete(context, ref),
+              PopupMenuButton<String>(
+                icon: const Icon(Icons.more_vert),
+                tooltip: 'More options',
+                onSelected: (value) {
+                  if (value == 'delete') {
+                    _confirmDelete(context, ref);
+                  }
+                },
+                itemBuilder: (context) => [
+                  PopupMenuItem(
+                    value: 'delete',
+                    child: Row(
+                      children: [
+                        Icon(Icons.delete_outline, color: colorScheme.error),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Delete',
+                          style: textTheme.bodyMedium?.copyWith(
+                            color: colorScheme.error,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(width: 4),
             ],
@@ -80,11 +102,7 @@ class EntryDetailScreen extends ConsumerWidget {
                   const SizedBox(height: 32),
                 ],
 
-                // Divider
-                Divider(
-                  color: colorScheme.outlineVariant.withValues(alpha: 0.5),
-                ),
-                const SizedBox(height: 28),
+                const SizedBox(height: 12),
 
                 // Body
                 SelectableText(
@@ -99,6 +117,48 @@ class EntryDetailScreen extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+      bottomNavigationBar: Container(
+        decoration: BoxDecoration(
+          color: colorScheme.surface,
+          border: Border(
+            top: BorderSide(
+              color: colorScheme.outlineVariant.withValues(alpha: 0.4),
+              width: 1,
+            ),
+          ),
+        ),
+        padding: EdgeInsets.fromLTRB(
+          16,
+          12,
+          16,
+          MediaQuery.paddingOf(context).bottom + 12,
+        ),
+        child: SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          child: Row(
+            children: [
+              FilledButton.tonalIcon(
+                onPressed: () {
+                  // TODO: Implement Edit
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Edit coming soon')),
+                  );
+                },
+                icon: const Icon(Icons.edit_outlined),
+                label: const Text('Edit Entry'),
+              ),
+              const SizedBox(width: 12),
+              FilledButton.tonalIcon(
+                onPressed: () {
+                  // TODO: Implement Share
+                },
+                icon: const Icon(Icons.share_outlined),
+                label: const Text('Share'),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

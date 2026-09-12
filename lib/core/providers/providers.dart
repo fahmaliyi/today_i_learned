@@ -4,6 +4,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:today_i_learned/core/models/entry.dart';
 import 'package:today_i_learned/core/notifiers/entries_notifier.dart';
 import 'package:today_i_learned/core/notifiers/theme_notifier.dart';
+import 'package:today_i_learned/core/notifiers/color_notifier.dart';
+import 'package:today_i_learned/core/notifiers/dynamic_color_notifier.dart';
 
 // ---------------------------------------------------------------------------
 // Infrastructure
@@ -24,6 +26,13 @@ final entriesNotifierProvider =
 final themeNotifierProvider = NotifierProvider<ThemeNotifier, ThemeMode>(
   ThemeNotifier.new,
 );
+
+final colorNotifierProvider = NotifierProvider<ColorNotifier, Color>(
+  ColorNotifier.new,
+);
+
+final dynamicColorNotifierProvider =
+    NotifierProvider<DynamicColorNotifier, bool>(DynamicColorNotifier.new);
 
 // ---------------------------------------------------------------------------
 // Derived / UI providers

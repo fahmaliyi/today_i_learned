@@ -1,10 +1,18 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class AppTheme {
   AppTheme._();
 
-  static const Color _seedColor = Color(0xFF6366F1);
+  static const List<(String, Color)> seedColors = [
+    ('Indigo', Color(0xFF6366F1)),
+    ('Rose', Color(0xFFE11D48)),
+    ('Emerald', Color(0xFF10B981)),
+    ('Amber', Color(0xFFF59E0B)),
+    ('Ocean', Color(0xFF0EA5E9)),
+    ('Slate', Color(0xFF64748B)),
+  ];
+
   static const String _fontFamily = 'PlusJakartaSans';
 
   // ---------------------------------------------------------------------------
@@ -102,9 +110,9 @@ class AppTheme {
   // Light theme
   // ---------------------------------------------------------------------------
 
-  static ThemeData get light {
+  static ThemeData light(Color seedColor) {
     final colorScheme = ColorScheme.fromSeed(
-      seedColor: _seedColor,
+      seedColor: seedColor,
       brightness: Brightness.light,
     );
 
@@ -148,9 +156,9 @@ class AppTheme {
   // Dark theme
   // ---------------------------------------------------------------------------
 
-  static ThemeData get dark {
+  static ThemeData dark(Color seedColor) {
     final colorScheme = ColorScheme.fromSeed(
-      seedColor: _seedColor,
+      seedColor: seedColor,
       brightness: Brightness.dark,
     );
 

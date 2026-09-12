@@ -1,7 +1,8 @@
-﻿import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:today_i_learned/core/providers/providers.dart';
 import 'package:today_i_learned/core/ui/expressive_list.dart';
+import 'package:today_i_learned/core/theme/theme.dart';
 
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
@@ -79,6 +80,93 @@ class SettingsScreen extends ConsumerWidget {
                       onTap: () => ref
                           .read(themeNotifierProvider.notifier)
                           .setThemeMode(mode),
+                    );
+                  },
+                ),
+
+                const SizedBox(height: 32),
+
+                ExpressiveList(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: 2,
+                  itemBuilder: (context, index, borderRadius) {
+                    final selectedColor = ref.watch(colorNotifierProvider);
+                    final useDynamicColor = ref.watch(
+                      dynamicColorNotifierProvider,
+                    );
+
+                    if (index == 0) {
+                      return ExpressiveListTile(
+                        borderRadius: borderRadius,
+                        title: const Text('Color Theme'),
+                        subtitle: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 4),
+                            const Text(
+                              'Choose specific color or choose dynamic',
+                            ),
+                            const SizedBox(height: 16),
+                            Opacity(
+                              opacity: useDynamicColor ? 0.5 : 1.0,
+                              child: SingleChildScrollView(
+                                scrollDirection: Axis.horizontal,
+                                child: Row(
+                                  children: AppTheme.seedColors.map((
+                                    colorItem,
+                                  ) {
+                                    final (name, color) = colorItem;
+                                    final isSelected = selectedColor == color;
+                                    return GestureDetector(
+                                      onTap: useDynamicColor
+                                          ? null
+                                          : () => ref
+                                                .read(
+                                                  colorNotifierProvider
+                                                      .notifier,
+                                                )
+                                                .setColor(color),
+                                      child: Container(
+                                        width: 36,
+                                        height: 36,
+                                        margin: const EdgeInsets.only(
+                                          right: 12,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: color,
+                                          shape: BoxShape.circle,
+                                          border: isSelected
+                                              ? Border.all(
+                                                  color: colorScheme.onSurface,
+                                                  width: 3,
+                                                )
+                                              : null,
+                                        ),
+                                      ),
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                          ],
+                        ),
+                      );
+                    }
+
+                    return ExpressiveListTile(
+                      borderRadius: borderRadius,
+                      title: const Text('Dynamic color'),
+                      trailing: Switch(
+                        value: useDynamicColor,
+                        onChanged: (val) => ref
+                            .read(dynamicColorNotifierProvider.notifier)
+                            .setDynamicColor(val),
+                      ),
+                      onTap: () => ref
+                          .read(dynamicColorNotifierProvider.notifier)
+                          .setDynamicColor(!useDynamicColor),
                     );
                   },
                 ),
@@ -165,11 +253,10 @@ class _SectionHeader extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 0, 20, 6),
       child: Text(
-        label.toUpperCase(),
-        style: theme.textTheme.labelSmall?.copyWith(
-          color: theme.colorScheme.primary,
-          fontWeight: FontWeight.w700,
-          letterSpacing: 1.2,
+        label,
+        style: theme.textTheme.bodySmall?.copyWith(
+          color: theme.colorScheme.onSurfaceVariant,
+          fontWeight: FontWeight.w600,
         ),
       ),
     );
