@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:today_i_learned/core/models/entry.dart';
 import 'package:today_i_learned/core/providers/providers.dart';
+import 'package:today_i_learned/core/ui/empty_state.dart';
 import 'package:today_i_learned/core/ui/entry_card.dart';
 import 'package:today_i_learned/features/entries/entry_detail_screen.dart';
 import 'package:today_i_learned/features/entries/new_entry_screen.dart';
@@ -103,99 +104,104 @@ class _EntriesScreenState extends ConsumerState<EntriesScreen> {
           ),
 
           // --- Search ---
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(8, 12, 8, 20),
-              child: SearchBar(
-                controller: _searchController,
-                constraints: const BoxConstraints(minHeight: 48, maxHeight: 48),
-                hintText: 'Search your entries...',
-                hintStyle: WidgetStatePropertyAll(
-                  textTheme.bodyMedium?.copyWith(
-                    color: colorScheme.onSurfaceVariant,
-                    fontSize: 15,
+          if (!isEmpty)
+            SliverToBoxAdapter(
+              child: Padding(
+                padding: const EdgeInsets.fromLTRB(8, 12, 8, 20),
+                child: SearchBar(
+                  controller: _searchController,
+                  constraints: const BoxConstraints(
+                    minHeight: 48,
+                    maxHeight: 48,
                   ),
-                ),
-                leading: Padding(
-                  padding: const EdgeInsets.only(left: 4),
-                  child: Icon(
-                    Icons.search_rounded,
-                    size: 20,
-                    color: colorScheme.onSurfaceVariant,
+                  hintText: 'Search your entries...',
+                  hintStyle: WidgetStatePropertyAll(
+                    textTheme.bodyMedium?.copyWith(
+                      color: colorScheme.onSurfaceVariant,
+                      fontSize: 15,
+                    ),
                   ),
-                ),
-                elevation: const WidgetStatePropertyAll(0),
-                backgroundColor: WidgetStatePropertyAll(
-                  colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
-                ),
-                padding: const WidgetStatePropertyAll(
-                  EdgeInsets.symmetric(horizontal: 16, vertical: 0),
-                ),
-                trailing: [
-                  ValueListenableBuilder<TextEditingValue>(
-                    valueListenable: _searchController,
-                    builder: (context, value, _) {
-                      final hasText = value.text.isNotEmpty;
-                      return AnimatedOpacity(
-                        opacity: hasText ? 1.0 : 0.0,
-                        duration: const Duration(milliseconds: 200),
-                        curve: Curves.easeOutCubic,
-                        child: IgnorePointer(
-                          ignoring: !hasText,
-                          child: IconButton(
-                            icon: const Icon(Icons.close_rounded, size: 20),
-                            color: colorScheme.onSurfaceVariant,
-                            tooltip: 'Clear',
-                            onPressed: _searchController.clear,
+                  leading: Padding(
+                    padding: const EdgeInsets.only(left: 4),
+                    child: Icon(
+                      Icons.search_rounded,
+                      size: 20,
+                      color: colorScheme.onSurfaceVariant,
+                    ),
+                  ),
+                  elevation: const WidgetStatePropertyAll(0),
+                  backgroundColor: WidgetStatePropertyAll(
+                    colorScheme.surfaceContainerHighest.withValues(alpha: 0.4),
+                  ),
+                  padding: const WidgetStatePropertyAll(
+                    EdgeInsets.symmetric(horizontal: 16, vertical: 0),
+                  ),
+                  trailing: [
+                    ValueListenableBuilder<TextEditingValue>(
+                      valueListenable: _searchController,
+                      builder: (context, value, _) {
+                        final hasText = value.text.isNotEmpty;
+                        return AnimatedOpacity(
+                          opacity: hasText ? 1.0 : 0.0,
+                          duration: const Duration(milliseconds: 200),
+                          curve: Curves.easeOutCubic,
+                          child: IgnorePointer(
+                            ignoring: !hasText,
+                            child: IconButton(
+                              icon: const Icon(Icons.close_rounded, size: 20),
+                              color: colorScheme.onSurfaceVariant,
+                              tooltip: 'Clear',
+                              onPressed: _searchController.clear,
+                            ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                ],
+                        );
+                      },
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
 
           // --- Filter chips ---
-          SliverToBoxAdapter(
-            child: SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Row(
-                children: allTags.map((tag) {
-                  final isSelected = selectedTag == tag;
-                  return Padding(
-                    padding: const EdgeInsets.only(right: 8),
-                    child: FilterChip(
-                      label: Text(tag),
-                      selected: isSelected,
-                      showCheckmark: false,
-                      elevation: 0,
-                      pressElevation: 0,
-                      backgroundColor: colorScheme.surfaceContainerHighest
-                          .withValues(alpha: 0.3),
-                      selectedColor: colorScheme.secondaryContainer,
-                      labelStyle: textTheme.labelMedium?.copyWith(
-                        color: isSelected
-                            ? colorScheme.onSecondaryContainer
-                            : colorScheme.onSurfaceVariant,
-                        fontWeight: isSelected
-                            ? FontWeight.w600
-                            : FontWeight.w500,
+          if (!isEmpty)
+            SliverToBoxAdapter(
+              child: SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Row(
+                  children: allTags.map((tag) {
+                    final isSelected = selectedTag == tag;
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8),
+                      child: FilterChip(
+                        label: Text(tag),
+                        selected: isSelected,
+                        showCheckmark: false,
+                        elevation: 0,
+                        pressElevation: 0,
+                        backgroundColor: colorScheme.surfaceContainerHighest
+                            .withValues(alpha: 0.3),
+                        selectedColor: colorScheme.secondaryContainer,
+                        labelStyle: textTheme.labelMedium?.copyWith(
+                          color: isSelected
+                              ? colorScheme.onSecondaryContainer
+                              : colorScheme.onSurfaceVariant,
+                          fontWeight: isSelected
+                              ? FontWeight.w600
+                              : FontWeight.w500,
+                        ),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(20),
+                          side: const BorderSide(color: Colors.transparent),
+                        ),
+                        onSelected: (_) =>
+                            ref.read(selectedTagProvider.notifier).state = tag,
                       ),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
-                        side: const BorderSide(color: Colors.transparent),
-                      ),
-                      onSelected: (_) =>
-                          ref.read(selectedTagProvider.notifier).state = tag,
-                    ),
-                  );
-                }).toList(),
+                    );
+                  }).toList(),
+                ),
               ),
             ),
-          ),
 
           // --- Entries or empty state ---
           entriesAsync.when(
@@ -211,33 +217,25 @@ class _EntriesScreenState extends ConsumerState<EntriesScreen> {
               if (filtered.isEmpty) {
                 return SliverFillRemaining(
                   hasScrollBody: false,
-                  child: Center(
-                    child: Padding(
-                      padding: const EdgeInsets.all(32),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            Icons.search_off_rounded,
-                            size: 48,
-                            color: colorScheme.onSurfaceVariant.withValues(
-                              alpha: 0.5,
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                          Text(
-                            isEmpty
-                                ? 'No entries yet.\nTap + to add your first one!'
-                                : 'No entries match your search.',
-                            textAlign: TextAlign.center,
-                            style: textTheme.bodyMedium?.copyWith(
-                              color: colorScheme.onSurfaceVariant,
-                              height: 1.5,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
+                  child: EmptyState(
+                    icon: isEmpty
+                        ? Icons.menu_book_rounded
+                        : Icons.search_off_rounded,
+                    title: isEmpty ? 'No entries yet' : 'No results found',
+                    message: isEmpty
+                        ? 'Start documenting what you learn today and build your knowledge base.'
+                        : 'We couldn\'t find any entries matching your current search and filters.',
+                    ctaIcon: isEmpty
+                        ? Icons.add_rounded
+                        : Icons.clear_all_rounded,
+                    ctaLabel: isEmpty ? 'Create First Entry' : 'Clear Filters',
+                    onCtaPressed: isEmpty
+                        ? _openNewEntry
+                        : () {
+                            _searchController.clear();
+                            ref.read(selectedTagProvider.notifier).state =
+                                'All';
+                          },
                   ),
                 );
               }
